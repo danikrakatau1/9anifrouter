@@ -1,4 +1,4 @@
-// Worker "Kumpulan Model AI" — chat UI + proxy aman ke 9Router
+// Worker "Kumpulan Model AI v2" — chat UI + proxy aman ke 9Router
 // Env yang harus di-set di dashboard Cloudflare:
 //   NINE_BASE (variable) = https://rwhndpt.abc-tunnel.us/v1
 //   NINE_KEY  (secret)   = API key 9Router-mu
@@ -8,7 +8,7 @@ const HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kumpulan Model AI</title>
+<title>Kumpulan Model AI v2</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0a0a10;--panel:#12121a;--panel2:#1a1a26;--border:#23232f;--txt:#f0f0f5;--dim:#8b8b98;--acc1:#7c5cff;--acc2:#00d4ff}
@@ -67,7 +67,7 @@ header .t p{font-size:12px;color:var(--dim);margin-top:2px}
 <body>
 <header>
   <div class="logo">🤖</div>
-  <div class="t"><h1>Kumpulan Model AI</h1><p>Didukung 9Router</p></div>
+  <div class="t"><h1>Kumpulan Model AI v2</h1><p>Didukung 9Router</p></div>
   <div class="pill" id="cnt">…</div>
   <button class="icobtn" id="newBtn">+ Baru</button>
 </header>
