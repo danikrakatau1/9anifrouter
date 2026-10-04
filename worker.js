@@ -79,7 +79,7 @@ header .t p{font-size:12px;color:var(--dim);margin-top:2px}
 <div id="inputBar"><div id="inWrap"><textarea id="msg" rows="1" placeholder="Tulis pesan…"></textarea><button id="sendBtn">➤</button></div></div>
 <script>
 var chat=document.getElementById("chat"),mList=document.getElementById("mList"),mName=document.getElementById("mName");
-var models=[],cur="",history=[],busy=false;
+var models=[],cur="",msgs=[],busy=false;
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function md(s){s=esc(s);s=s.replace(/\\\`\\\`\\\`(\\w*)\\n([\\s\\S]*?)\\\`\\\`\\\`/g,function(m,l,c){return "<pre><code>"+c.replace(/^\\n+|\\n+$/g,"")+"</code></pre>";});s=s.replace(/\\\`([^\\\`]+)\\\`/g,"<code>$1</code>");s=s.replace(/\\*\\*([^*]+)\\*\\*/g,"<b>$1</b>");s=s.replace(/\\n/g,"<br>");return s;}
 function sys(t){var d=document.createElement("div");d.className="sys";d.textContent=t;chat.appendChild(d);go();}
@@ -144,14 +144,14 @@ async function send(){
     ta.value="";ta.style.height="auto";
     var wel=document.querySelector(".welcome");if(wel)wel.remove();
     addMsg("user",text);
-    history.push({role:"user",content:text});
+    msgs.push({role:"user",content:text});
     var ab=addMsg("ai","\u23f3 menghubungi model...");
     var btn=document.getElementById("sendBtn");btn.textContent="\u23f9";
     ctl=new AbortController();
     var to=setTimeout(function(){stopReq("\u23f1 Timeout 90 detik - coba lagi.");},90000);
     var full="",got=false;
     try{
-      var r=await fetch("/api/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({model:cur,messages:history,stream:true})});
+      var r=await fetch("/api/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({model:cur,messages:msgs,stream:true})});
       if(!r.ok)throw new Error("HTTP "+r.status);
       if(!r.body)throw new Error("browser tidak mendukung streaming");
       var rd=r.body.getReader(),dec=new TextDecoder(),buf="";
@@ -166,7 +166,7 @@ async function send(){
         }
         if(full)ab.innerHTML=md(full);
       }
-      if(full)history.push({role:"assistant",content:full});
+      if(full)msgs.push({role:"assistant",content:full});
     }catch(e){
       if(e.name==="AbortError"){full=full||stopMsg||"Dihentikan.";}
       else{full="\u26a0\ufe0f "+e.message;}
@@ -193,7 +193,7 @@ ta.addEventListener("input",function(){ta.style.height="auto";ta.style.height=Ma
 document.getElementById("modelBtn").onclick=function(e){e.stopPropagation();var d=document.getElementById("drop");d.classList.toggle("open");if(d.classList.contains("open"))document.getElementById("mSearch").focus();};
 document.getElementById("mSearch").addEventListener("input",function(e){renderList(e.target.value);});
 document.addEventListener("click",function(){document.getElementById("drop").classList.remove("open");});
-document.getElementById("newBtn").onclick=function(){history=[];welcome();};
+document.getElementById("newBtn").onclick=function(){msgs=[];welcome();};
 window.onerror=function(m,s,l){try{var d=document.createElement("div");d.className="sys";d.textContent="JS Error: "+m+" @"+(l||"?");document.getElementById("chat").appendChild(d);}catch(e){}};
 welcome();load();
 </script>
