@@ -1,0 +1,7 @@
+name = "9anifrouter"
+main = "worker.js"
+compatibility_date = "2026-10-04"
+
+[vars]
+NINE_BASE = "https://rwhndpt.abc-tunnel.us/v1"
+# NINE_KEY di-set sebagai secret via dashboard atau: wrangler secret put NINE_KEY
