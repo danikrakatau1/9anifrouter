@@ -1,4 +1,4 @@
-// Worker "Kumpulan Model AI v2" — chat UI + proxy aman ke 9Router
+// Worker "Kumpulan Model AI" — chat UI + proxy aman ke 9Router
 // Env yang harus di-set di dashboard Cloudflare:
 //   NINE_BASE (variable) = https://rwhndpt.abc-tunnel.us/v1
 //   NINE_KEY  (secret)   = API key 9Router-mu
@@ -8,7 +8,7 @@ const HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kumpulan Model AI v2</title>
+<title>Kumpulan Model AI</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0a0a10;--panel:#12121a;--panel2:#1a1a26;--border:#23232f;--txt:#f0f0f5;--dim:#8b8b98;--acc1:#7c5cff;--acc2:#00d4ff}
@@ -67,7 +67,7 @@ header .t p{font-size:12px;color:var(--dim);margin-top:2px}
 <body>
 <header>
   <div class="logo">🤖</div>
-  <div class="t"><h1>Kumpulan Model AI v2</h1><p>Didukung 9Router</p></div>
+  <div class="t"><h1>Kumpulan Model AI <span style="font-size:10px;background:#22c55e;border-radius:4px;padding:2px 8px;vertical-align:middle">v3</span></h1><p>Didukung 9Router</p></div>
   <div class="pill" id="cnt">…</div>
   <button class="icobtn" id="newBtn">+ Baru</button>
 </header>
@@ -158,7 +158,7 @@ async function send(){
       while(true){
         var s=await rd.read();if(s.done)break;
         buf+=dec.decode(s.value,{stream:true});
-        var ps=buf.split("\n\n");buf=ps.pop();
+        var ps=buf.split(String.fromCharCode(10,10));buf=ps.pop();
         for(var i=0;i<ps.length;i++){
           var ln=ps[i].trim();if(ln.indexOf("data:")!==0)continue;
           var dt=ln.slice(5).trim();if(dt==="[DONE]")continue;
