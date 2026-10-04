@@ -116,44 +116,59 @@ function addRow(role){
   if(role==="a"){var a=document.createElement("div");a.className="ava";a.textContent="🤖";w.appendChild(a);}
   w.appendChild(b);chat.appendChild(w);go();return b;
 }
-var ctl=null,stopMsg="";
+var ctl=null,stopMsg="",busy=false;
 function stopReq(m){stopMsg=m||"";if(ctl){try{ctl.abort();}catch(e){}}}
+function status(t){var d=document.createElement("div");d.className="sys";d.textContent=t;document.getElementById("chat").appendChild(d);document.getElementById("chat").scrollTop=1e9;}
 async function send(){
-  if(busy){stopReq();return;}
-  var ta=document.getElementById("msg"),text=ta.value.trim();
-  if(!text||!cur)return;
-  ta.value="";ta.style.height="auto";
-  var wel=document.querySelector(".welcome");if(wel)wel.remove();
-  var ub=addRow("user");ub.innerHTML=esc(text);
-  history.push({role:"user",content:text});
-  var ab=addRow("ai");ab.innerHTML='<span class="dots"><span></span><span></span><span></span></span>';
-  var btn=document.getElementById("sendBtn");btn.textContent="\u23f9";busy=true;
-  ctl=new AbortController();
-  var to=setTimeout(function(){stopReq("\u23f1 Timeout 90 detik - coba lagi.");},90000);
-  var full="";
   try{
-    var r=await fetch("/api/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({model:cur,messages:history,stream:true})});
-    if(!r.ok||!r.body)throw new Error("HTTP "+r.status);
-    var rd=r.body.getReader(),dec=new TextDecoder(),buf="";
-    while(true){
-      var s=await rd.read();if(s.done)break;
-      buf+=dec.decode(s.value,{stream:true});
-      var ps=buf.split("\\n\\n");buf=ps.pop();
-      for(var i=0;i<ps.length;i++){
-        var ln=ps[i].trim();if(ln.indexOf("data:")!==0)continue;
-        var dt=ln.slice(5).trim();if(dt==="[DONE]")continue;
-        try{full+=JSON.parse(dt).choices[0].delta.content||"";}catch(e){}
-        ab.innerHTML=md(full);go();
+    if(busy){stopReq();return;}
+    var ta=document.getElementById("msg"),text=ta.value.trim();
+    if(!text||!cur){if(!cur)status("Pilih model dulu.");return;}
+    busy=true;
+    ta.value="";ta.style.height="auto";
+    var wel=document.querySelector(".welcome");if(wel)wel.remove();
+    addMsg("user",text);
+    history.push({role:"user",content:text});
+    var ab=addMsg("ai","\u23f3 menghubungi model...");
+    var btn=document.getElementById("sendBtn");btn.textContent="\u23f9";
+    ctl=new AbortController();
+    var to=setTimeout(function(){stopReq("\u23f1 Timeout 90 detik - coba lagi.");},90000);
+    var full="",got=false;
+    try{
+      var r=await fetch("/api/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({model:cur,messages:history,stream:true})});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      if(!r.body)throw new Error("browser tidak mendukung streaming");
+      var rd=r.body.getReader(),dec=new TextDecoder(),buf="";
+      while(true){
+        var s=await rd.read();if(s.done)break;
+        buf+=dec.decode(s.value,{stream:true});
+        var ps=buf.split("\n\n");buf=ps.pop();
+        for(var i=0;i<ps.length;i++){
+          var ln=ps[i].trim();if(ln.indexOf("data:")!==0)continue;
+          var dt=ln.slice(5).trim();if(dt==="[DONE]")continue;
+          try{var ch=JSON.parse(dt).choices[0].delta.content||"";if(ch){got=true;full+=ch;}}catch(e){}
+        }
+        if(full)ab.innerHTML=md(full);
       }
+      if(full)history.push({role:"assistant",content:full});
+    }catch(e){
+      if(e.name==="AbortError"){full=full||stopMsg||"Dihentikan.";}
+      else{full="\u26a0\ufe0f "+e.message;}
     }
-    history.push({role:"assistant",content:full});
+    clearTimeout(to);
+    ab.innerHTML=md(full||"(kosong - model tidak mengembalikan teks)");
+    document.getElementById("chat").scrollTop=1e9;
+    busy=false;ctl=null;btn.textContent="\u27a4";
   }catch(e){
-    if(e.name==="AbortError"){full=full||stopMsg||"Dihentikan.";}
-    else{full="\u26a0\ufe0f "+e.message;}
+    busy=false;
+    status("Error di send(): "+e.message);
   }
-  clearTimeout(to);
-  ab.innerHTML=md(full||"(kosong)");go();
-  busy=false;ctl=null;btn.textContent="\u27a4";btn.disabled=false;
+}
+function addMsg(role,text){
+  var w=document.createElement("div");w.className="row "+(role==="user"?"u":"a");
+  var b=document.createElement("div");b.className="bub";b.innerHTML=text;
+  if(role!=="user"){var a=document.createElement("div");a.className="ava";a.textContent="\u0001f916";w.appendChild(a);}
+  w.appendChild(b);var c=document.getElementById("chat");c.appendChild(w);c.scrollTop=1e9;return b;
 }
 document.getElementById("sendBtn").onclick=send;
 var ta=document.getElementById("msg");
