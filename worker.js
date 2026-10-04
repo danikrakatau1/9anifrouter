@@ -163,6 +163,7 @@ document.getElementById("modelBtn").onclick=function(e){e.stopPropagation();var 
 document.getElementById("mSearch").addEventListener("input",function(e){renderList(e.target.value);});
 document.addEventListener("click",function(){document.getElementById("drop").classList.remove("open");});
 document.getElementById("newBtn").onclick=function(){history=[];welcome();};
+window.onerror=function(m,s,l){try{var d=document.createElement("div");d.className="sys";d.textContent="JS Error: "+m+" @"+(l||"?");document.getElementById("chat").appendChild(d);}catch(e){}};
 welcome();load();
 </script>
 </body>
