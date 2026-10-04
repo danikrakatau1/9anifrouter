@@ -195,10 +195,16 @@ export default {
       headers.set("Authorization", "Bearer " + env.NINE_KEY);
       const ct = req.headers.get("content-type");
       if (ct) headers.set("content-type", ct);
-      const resp = await fetch(target, {
-        method: req.method, headers,
-        body: ["GET", "HEAD"].includes(req.method) ? undefined : req.body,
-      });
+      let resp;
+      try {
+        resp = await fetch(target, {
+          method: req.method, headers,
+          body: ["GET", "HEAD"].includes(req.method) ? undefined : req.body,
+          signal: AbortSignal.timeout(25000),
+        });
+      } catch (e) {
+        return json({ error: "9Router tidak merespons (tunnel mungkin mati). Cek tunnel di perangkat 9Router-mu lalu coba lagi." }, 504);
+      }
       const out = new Headers(resp.headers);
       Object.entries(cors()).forEach(([k, v]) => out.set(k, v));
       return new Response(resp.body, { status: resp.status, headers: out });
