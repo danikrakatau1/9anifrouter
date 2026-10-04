@@ -116,18 +116,23 @@ function addRow(role){
   if(role==="a"){var a=document.createElement("div");a.className="ava";a.textContent="🤖";w.appendChild(a);}
   w.appendChild(b);chat.appendChild(w);go();return b;
 }
+var ctl=null,stopMsg="";
+function stopReq(m){stopMsg=m||"";if(ctl){try{ctl.abort();}catch(e){}}}
 async function send(){
+  if(busy){stopReq();return;}
   var ta=document.getElementById("msg"),text=ta.value.trim();
-  if(!text||busy||!cur)return;
+  if(!text||!cur)return;
   ta.value="";ta.style.height="auto";
-  document.querySelector(".welcome")&&document.querySelector(".welcome").remove();
+  var wel=document.querySelector(".welcome");if(wel)wel.remove();
   var ub=addRow("user");ub.innerHTML=esc(text);
   history.push({role:"user",content:text});
   var ab=addRow("ai");ab.innerHTML='<span class="dots"><span></span><span></span><span></span></span>';
-  document.getElementById("sendBtn").disabled=true;busy=true;
+  var btn=document.getElementById("sendBtn");btn.textContent="\u23f9";busy=true;
+  ctl=new AbortController();
+  var to=setTimeout(function(){stopReq("\u23f1 Timeout 90 detik - coba lagi.");},90000);
   var full="";
   try{
-    var r=await fetch("/api/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:cur,messages:history,stream:true})});
+    var r=await fetch("/api/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({model:cur,messages:history,stream:true})});
     if(!r.ok||!r.body)throw new Error("HTTP "+r.status);
     var rd=r.body.getReader(),dec=new TextDecoder(),buf="";
     while(true){
@@ -142,9 +147,13 @@ async function send(){
       }
     }
     history.push({role:"assistant",content:full});
-  }catch(e){full="⚠️ "+e.message;}
+  }catch(e){
+    if(e.name==="AbortError"){full=full||stopMsg||"Dihentikan.";}
+    else{full="\u26a0\ufe0f "+e.message;}
+  }
+  clearTimeout(to);
   ab.innerHTML=md(full||"(kosong)");go();
-  busy=false;document.getElementById("sendBtn").disabled=false;
+  busy=false;ctl=null;btn.textContent="\u27a4";btn.disabled=false;
 }
 document.getElementById("sendBtn").onclick=send;
 var ta=document.getElementById("msg");
