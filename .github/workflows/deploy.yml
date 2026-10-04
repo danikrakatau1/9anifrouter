@@ -16,12 +16,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-
-      - name: Set NINE_KEY secret
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: secret put NINE_KEY
-        env:
-          NINE_KEY: ${{ secrets.NINE_KEY }}
+# NINE_KEY di-set manual sekali via dashboard (Workers → Settings → Variables and Secrets)
+# karena wrangler secret put butuh input interaktif yang tidak jalan di CI.
