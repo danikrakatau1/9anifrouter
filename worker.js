@@ -101,14 +101,30 @@ function welcome(){
   chat.innerHTML='<div class="welcome"><div class="big">🤖</div><h2>Halo, bosku!</h2><p>Pilih model di atas, lalu mulai ngobrol.<br>Semua model dari 9Router-mu ada di sini.</p></div>';
 }
 async function load(){
-  try{
-    var r=await fetch("/api/models");if(!r.ok)throw new Error("HTTP "+r.status);
-    var j=await r.json();
-    models=(j.data||[]).map(function(m){return m.id;}).filter(Boolean).sort();
-    document.getElementById("cnt").textContent=models.length+" model";
-    if(models.length){cur=models[0];mName.textContent=cur;}
-    renderList("");
-  }catch(e){mName.textContent="Gagal memuat";sys("Gagal: "+e.message);}
+  mName.textContent="Menghubungi 9Router...";
+  for(var a=0;a<3;a++){
+    try{
+      var ctl=new AbortController();
+      var to=setTimeout(function(){ctl.abort();},20000);
+      var r=await fetch("/api/models",{signal:ctl.signal});
+      clearTimeout(to);
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      var j=await r.json();
+      if(j.error)throw new Error(j.error);
+      models=(j.data||[]).map(function(m){return m.id;}).filter(Boolean).sort();
+      if(!models.length)throw new Error("model kosong");
+      document.getElementById("cnt").textContent=models.length+" model";
+      cur=models[0];mName.textContent=cur;
+      renderList("");
+      sys(models.length+" model dimuat.");
+      return;
+    }catch(e){
+      mName.textContent="Mencoba lagi... ("+(a+1)+"/3)";
+      await new Promise(function(r){setTimeout(r,2000);});
+    }
+  }
+  mName.textContent="Gagal memuat";
+  sys("9Router tidak merespons setelah 3x coba. Cek tunnel di perangkat 9Router-mu, lalu klik \u21bb.");
 }
 function addRow(role){
   var w=document.createElement("div");w.className="row "+(role==="user"?"u":"a");
